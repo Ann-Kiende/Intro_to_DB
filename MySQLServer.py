@@ -1,30 +1,46 @@
 import mysql.connector
 from mysql.connector import Error
 
+DB_NAME = "alx_book_store"
+
 def create_database():
+    connection = None
+    cursor = None
     try:
-        # Connect to MySQL server
+        # Connect to MySQL server (adjust credentials as needed)
         connection = mysql.connector.connect(
-            host='localhost',
-            user='root',          # change this if your MySQL username is different
-            password='your_password_here'  # replace with your actual password
+            host="localhost",
+            user="root",
+            password="your_password_here"
         )
 
-        if connection.is_connected():
-            cursor = connection.cursor()
-            # Create database if it does not exist
-            cursor.execute("CREATE DATABASE IF NOT EXISTS alx_book_store")
-            print("Database 'alx_book_store' created successfully!")
+        # If connection fails, mysql.connector will raise an exception and jump to except block
+        cursor = connection.cursor()
+        # Create database (no SELECT or SHOW used)
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}`")
+        # Commit is not required for CREATE DATABASE but safe to call
+        connection.commit()
+        print(f"Database '{DB_NAME}' created successfully!")
 
-    except Error as e:
-        print(f"Error while connecting to MySQL: {e}")
+    except Error as err:
+        # Handles connection errors, authentication failures, permission issues, etc.
+        print(f"Error while connecting to MySQL or creating database: {err}")
 
     finally:
-        # Safely close cursor and connection
-        if connection.is_connected():
-            cursor.close()
-            connection.close()
-            print("MySQL connection is closed.")
+        # Close cursor and connection safely (only if they were created)
+        try:
+            if cursor is not None:
+                cursor.close()
+        except Exception as close_cursor_err:
+            print(f"Error closing cursor: {close_cursor_err}")
+
+        try:
+            if connection is not None and connection.is_connected():
+                connection.close()
+                # Confirm connection was closed
+                print("MySQL connection is closed.")
+        except Exception as close_conn_err:
+            print(f"Error closing connection: {close_conn_err}")
 
 if __name__ == "__main__":
     create_database()
